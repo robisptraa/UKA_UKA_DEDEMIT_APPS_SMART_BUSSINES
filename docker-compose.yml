@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # --- Database Service ---
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: uka_uka_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secretpassword
+      POSTGRES_DB: uka_uka_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- Backend Service (FastAPI) ---
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: uka_uka_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:secretpassword@postgres_db:5432/uka_uka_db
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - ENV=development
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+
+  # --- Telegram Bot Service (Python) ---
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: uka_uka_telegram_bot
+    restart: always
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - BACKEND_API_URL=http://backend:8000
+    depends_on:
+      - backend
+
+  # --- Web Service (Next.js) ---
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: uka_uka_web_dashboard
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local

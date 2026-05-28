@@ -1,0 +1,47 @@
+name: uka_uka_mobile
+description: "Uka-Uka AI Business OS - Flutter Mobile App for Business Owners"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- State Management & DI ---
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+
+  # --- Network & REST API ---
+  dio: ^5.4.0
+
+  # --- Utility & UI Components ---
+  google_fonts: ^6.1.0
+  flutter_spinkit: ^5.2.0
+  image_picker: ^1.0.7  # Digunakan owner untuk memotret pakaian/streetwear untuk dinilai AI
+  uuid: ^4.3.3
+
+  # --- Icons ---
+  cupertino_icons: ^1.0.6
+
+  # --- Routing & Secure Storage ---
+  go_router: ^13.0.0
+  flutter_secure_storage: ^9.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # --- Code Generation (Riverpod, Freezed) ---
+  build_runner: ^2.4.8
+  riverpod_generator: ^2.3.9
+
+flutter:
+  uses-material-design: true
+  
+  # Assets definition placeholders (for brand logo, etc.)
+  # assets:
+  #   - assets/images/

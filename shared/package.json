@@ -1,0 +1,24 @@
+{
+  "name": "@uka-uka/shared",
+  "version": "1.0.0",
+  "description": "Shared constants and types for Uka-Uka AI Business OS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean"
+  },
+  "keywords": [
+    "uka-uka",
+    "monorepo",
+    "shared",
+    "constants",
+    "types"
+  ],
+  "author": "Uka-Uka Development Team",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
