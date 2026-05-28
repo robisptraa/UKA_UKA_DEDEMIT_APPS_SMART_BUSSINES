@@ -1,4 +1,4 @@
-# 👻 Dedemit UMKM — AI Business OS untuk Semua Sektor UMKM Indonesia
+# 👻 Dedemit UMKM — AI Business OS untuk Semua Sektor UMKM Indonesia by Mas Obets Dev
 
 **Dedemit UMKM** adalah sistem operasi bisnis berbasis Kecerdasan Buatan (AI) yang dirancang khusus untuk merevolusi ekosistem UMKM di Indonesia, mulai dari warung makan, toko fashion, salon kecantikan, laundry, bengkel, toko kelontong, hingga penyedia jasa. Sistem ini membantu pemilik bisnis mengelola katalog produk dan jasa, melakukan analisis produk/jasa berbasis AI (*AI smart scanner & describer*), menulis caption promosi otomatis untuk media sosial, memproses pembayaran via Midtrans, serta berinteraksi secara otomatis dengan pelanggan & owner via Telegram Bot.
 
@@ -185,4 +185,5 @@ Demi menjaga kebersihan dan konsistensi kode monorepo Dedemit UMKM:
 2.  **Midtrans Snap Integrasi**: Mendukung pembayaran instan QRIS, Virtual Account bank nasional (BCA, Mandiri, BNI), dan e-wallet lokal untuk kemudahan transaksi pembeli bagi segala sektor usaha.
 
 ---
-*Dibuat dengan ❤️ oleh Tim Senior Software Architect Dedemit UMKM.*
+*Dibuat dengan ❤️ oleh Mas Obets Dev
+
