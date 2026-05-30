@@ -1,72 +1,125 @@
 version: '3.8'
 
 services:
-  # --- Database Service ---
+  # ─────────────────────────────────────────────
+  # PostgreSQL Database
+  # ─────────────────────────────────────────────
   postgres_db:
     image: postgres:15-alpine
-    container_name: uka_uka_postgres
-    restart: always
+    container_name: dedemit_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secretpassword
-      POSTGRES_DB: uka_uka_db
+      POSTGRES_USER: ${POSTGRES_USER:-dedemit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dedemit_secret_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-dedemit_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dedemit} -d ${POSTGRES_DB:-dedemit_db}"]
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
-  # --- Backend Service (FastAPI) ---
+  # ─────────────────────────────────────────────
+  # Redis Cache & Session Store
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: dedemit_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─────────────────────────────────────────────
+  # Backend FastAPI
+  # ─────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: uka_uka_backend
-    restart: always
+      target: runner
+    container_name: dedemit_backend
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://postgres:secretpassword@postgres_db:5432/uka_uka_db
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY}
-      - JWT_SECRET=${JWT_SECRET}
       - ENV=development
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-dedemit}:${POSTGRES_PASSWORD:-dedemit_secret_2024}@postgres_db:5432/${POSTGRES_DB:-dedemit_db}
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_in_prod_1234567890}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - MIDTRANS_SERVER_KEY=${MIDTRANS_SERVER_KEY:-}
+      - MIDTRANS_CLIENT_KEY=${MIDTRANS_CLIENT_KEY:-}
+      - MIDTRANS_IS_PRODUCTION=${MIDTRANS_IS_PRODUCTION:-false}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
     depends_on:
       postgres_db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
-  # --- Telegram Bot Service (Python) ---
+  # ─────────────────────────────────────────────
+  # Telegram Bot Worker
+  # ─────────────────────────────────────────────
   bot:
     build:
       context: ./bot
       dockerfile: Dockerfile
-    container_name: uka_uka_telegram_bot
-    restart: always
+    container_name: dedemit_bot
+    restart: unless-stopped
     environment:
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - BACKEND_API_URL=http://backend:8000
+      - ENV=development
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
-  # --- Web Service (Next.js) ---
+  # ─────────────────────────────────────────────
+  # Web Dashboard (Next.js)
+  # ─────────────────────────────────────────────
   web:
     build:
       context: ./web
       dockerfile: Dockerfile
-    container_name: uka_uka_web_dashboard
-    restart: always
+    container_name: dedemit_web
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
+      - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-dev_nextauth_secret_change_me}
+      - NEXTAUTH_URL=http://localhost:3000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:
     driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: dedemit_network

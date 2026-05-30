@@ -18,143 +18,247 @@ Platform ini didesain menggunakan arsitektur monorepo dengan pembagian kerja ber
 
 ---
 
-## 📂 Struktur Direktori Monorepo
+## 🏗️ Arsitektur Sistem
 
-```text
-dedemit-umkm/
-├── .env.example            # Template Environment Variables global
-├── .gitignore              # Git ignore terpadu untuk semua platform
-├── docker-compose.yml      # Orkestrasi Docker untuk Database PostgreSQL
-├── README.md               # Dokumentasi utama ini
-│
-├── shared/                 # Modul Konstan & Tipe Bersama (TypeScript)
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── src/
-│       ├── constants.ts    # Status order, kategori usaha (kuliner, jasa, dll)
-│       └── types.ts        # Interface & Types bersama
-│
-├── backend/                # RESTful API Utama (Python FastAPI)
-│   ├── requirements.txt    # Library python (FastAPI, SQLAlchemy, Alembic, Pydantic)
-│   ├── alembic.ini         # Konfigurasi migrasi database Alembic
-│   ├── Dockerfile          # Kontainerisasi API
-│   ├── alembic/            # Folder migrasi database
-│   └── app/                # Kode sumber backend (main.py, models, schemas, api, dll.)
-│
-├── bot/                    # Telegram Bot Service (Python)
-│   ├── requirements.txt    # Library python-telegram-bot v20 & HTTPX
-│   ├── Dockerfile          # Kontainerisasi Telegram Bot
-│   └── bot/                # Handlers, services, dan entrypoint bot (main.py)
-│
-├── web/                    # Dashboard & Landing Page (Next.js 14)
-│   ├── package.json        # Next.js, React, Tailwind, Lucide, dll.
-│   ├── tsconfig.json       # Konfigurasi TypeScript
-│   ├── tailwind.config.ts  # Desain sistem Tailwind & Token warna
-│   └── app/                # Next.js 14 App Router (layout, page, dashboard)
-│
-└── mobile/                 # Mobile App Owner (Flutter 3.x)
-    ├── pubspec.yaml        # Manajemen package (dio, flutter_riverpod, dll.)
-    └── lib/                # Clean Architecture berorientasi fitur (core, features)
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    DEDEMIT OS ARCHITECTURE                    ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  📱 Flutter Mobile          🌐 Next.js Web                    ║
+║  (iOS & Android)           (Dashboard + Landing)             ║
+║        │                          │                           ║
+║        └──────────────┬───────────┘                           ║
+║                       │ HTTPS / REST API                      ║
+║                       ▼                                       ║
+║          ┌─────────────────────────────┐                      ║
+║          │    FastAPI Backend (Python)  │                      ║
+║          │                             │                      ║
+║          │  ┌────────┐  ┌──────────┐   │                      ║
+║          │  │ Auth   │  │Inventory │   │                      ║
+║          │  │ Orders │  │Analytics │   │  ──► 🤖 Gemini AI    ║
+║          │  │Payments│  │ Finance  │   │  ──► 🧠 Claude AI    ║
+║          │  └────────┘  └──────────┘   │  ──► 💳 Midtrans    ║
+║          └──────┬───────────────┬───────┘                     ║
+║                 │               │                             ║
+║          ┌──────▼──┐      ┌─────▼───┐                         ║
+║          │PostgreSQL│      │  Redis  │                         ║
+║          │   (DB)  │      │ (Cache) │                         ║
+║          └─────────┘      └─────────┘                         ║
+║                                                               ║
+║  🤖 Telegram Bot ──────────────► Backend API                  ║
+║  (Python Worker)                                              ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
 
 ---
 
-## ⚡ Panduan Menjalankan Platform (Quick Start)
+## ✨ Fitur Utama
 
-### 1. Prasyarat Sistem
-Pastikan perangkat Anda telah terinstal tools berikut:
-*   Docker & Docker Compose (Untuk database PostgreSQL)
-*   Python 3.10+ (Untuk backend & bot)
-*   Node.js 18+ (Untuk web & shared constants)
-*   Flutter SDK 3.19+ & Dart SDK 3.x (Untuk mobile)
+| Fitur | Deskripsi | Status |
+|-------|-----------|--------|
+| 📸 **AI Product Scanner** | Foto produk → AI identifikasi nama, kategori, harga | ✅ Live |
+| 📦 **Manajemen Inventory** | Stok real-time, alert hampir habis, bulk import CSV | ✅ Live |
+| 🛒 **Order Management** | Buat order, tracking status, history lengkap | ✅ Live |
+| 💳 **Pembayaran Midtrans** | QRIS, transfer bank, dompet digital, kartu kredit | ✅ Live |
+| 🧾 **OCR Bukti Transfer** | Upload foto struk → AI verifikasi otomatis | ✅ Live |
+| 🤖 **Telegram Bot** | Pelanggan order via bot, notif real-time ke owner | ✅ Live |
+| 📊 **Analytics Dashboard** | Grafik revenue, best sellers, retensi pelanggan | ✅ Live |
+| 🧠 **AI Business Insight** | Rekomendasi aksi berbasis data aktual | ✅ Live |
+| 💰 **Laporan Keuangan** | Laba rugi, pengeluaran, arus kas per periode | ✅ Live |
+| 📱 **Mobile App (Flutter)** | Native iOS & Android untuk owner di lapangan | ✅ Live |
 
-### 2. Konfigurasi Environment Variables
-Salin berkas `.env.example` menjadi `.env` di root direktori, lalu lengkapi nilai variabelnya:
+---
+
+## ⚡ Quick Start (5 Langkah)
+
+### Prasyarat
+- Docker & Docker Compose
+- Python 3.11+
+- Node.js 18+
+
+### Langkah 1: Clone & Setup Environment
 ```bash
-cp .env.example .env
+git clone https://github.com/yourusername/uka-uka.git
+cd uka-uka
+
+# Jalankan wizard setup interaktif
+bash setup-env.sh
 ```
 
-### 3. Jalankan Database Lokal (PostgreSQL)
-Jalankan Docker Compose untuk memulai layanan database PostgreSQL:
+### Langkah 2: Cek Dependency
 ```bash
-docker compose up -d postgres_db
+bash check-deps.sh
+```
+
+### Langkah 3: Jalankan Semua Service
+```bash
+docker-compose up --build -d
+```
+
+### Langkah 4: Isi Database dengan Data Demo
+```bash
+cd backend
+pip install -r requirements.txt
+python seed_demo_data.py
+```
+
+### Langkah 5: Buka Aplikasi
+```
+🌐 Web Dashboard:  http://localhost:3000
+📚 API Docs:       http://localhost:8000/docs
+❤️  Health Check:  http://localhost:8000/health
+
+👤 Login Demo:
+   Email:    bos@dedemit.id
+   Password: Password123!
 ```
 
 ---
 
-## 🚀 Langkah Menjalankan Tiap Platform secara Lokal
+## 🛠️ Tech Stack
 
-### A. Shared Module (`/shared`)
-Modul ini berisi tipe data TypeScript dan konstanta bisnis.
+### Backend
+| Teknologi | Versi | Fungsi |
+|-----------|-------|--------|
+| **FastAPI** | 0.109 | REST API Framework |
+| **SQLAlchemy** | 2.0 | ORM Async |
+| **PostgreSQL** | 15 | Database Utama |
+| **Redis** | 7 | Cache & Session |
+| **Alembic** | 1.13 | Database Migrations |
+| **PyJWT** | 2.8 | Authentication |
+| **Google Gemini** | 0.4 | AI Vision & Analysis |
+| **Anthropic Claude** | 0.18 | AI Fallback |
+| **Midtrans** | SDK | Payment Gateway |
+
+### Frontend
+| Teknologi | Versi | Fungsi |
+|-----------|-------|--------|
+| **Next.js** | 14 | Web Dashboard |
+| **React** | 18 | UI Framework |
+| **Tailwind CSS** | 3.4 | Styling |
+| **Recharts** | 3.8 | Data Visualization |
+| **Framer Motion** | 12 | Animasi |
+| **SWR** | 2.4 | Data Fetching |
+
+### Mobile
+| Teknologi | Versi | Fungsi |
+|-----------|-------|--------|
+| **Flutter** | 3.x | Native iOS & Android |
+| **Riverpod** | 2.6 | State Management |
+| **Dio** | 5.x | HTTP Client |
+| **Go Router** | 13 | Navigation |
+
+### DevOps
+| Teknologi | Fungsi |
+|-----------|--------|
+| **Docker** | Containerization |
+| **Docker Compose** | Local Orchestration |
+| **Railway** | Backend Hosting |
+| **Vercel** | Frontend Hosting |
+| **pytest** | Integration Testing |
+
+---
+
+## 🧪 Menjalankan Tests
+
 ```bash
-# Masuk ke direktori
-cd shared
-
-# Instal dependensi & build modul
-npm install
-npm run build
-```
-
-### B. Backend API (`/backend`)
-```bash
-# Masuk ke direktori
 cd backend
 
-# Membuat virtual environment
-python -m venv venv
-source venv/bin/activate  # Untuk macOS/Linux
-# venv\Scripts\activate   # Untuk Windows
+# Install test dependencies
+pip install pytest pytest-asyncio httpx aiosqlite
 
-# Instal dependensi
-pip install -r requirements.txt
+# Jalankan 6 integration test suites
+pytest tests/test_integration.py -v
 
-# Menjalankan database migrasi (Alembic)
-alembic upgrade head
-
-# Jalankan server FastAPI (reload mode aktif)
-uvicorn app.main:app --reload --port 8000
-```
-API akan tersedia secara lokal di: `http://localhost:8000` dengan Swagger UI interaktif di `http://localhost:8000/docs`.
-
-### C. Telegram Bot (`/bot`)
-```bash
-# Masuk ke direktori
-cd bot
-
-# Aktifkan virtual environment (bisa buat venv terpisah atau gabung)
-python -m venv venv
-source venv/bin/activate
-
-# Instal dependensi
-pip install -r requirements.txt
-
-# Jalankan Telegram Bot
-python -m bot.main
+# Jalankan dengan coverage report
+pytest tests/test_integration.py -v --tb=short
 ```
 
-### D. Web Dashboard & Landing (`/web`)
-```bash
-# Masuk ke direktori
-cd web
+**Test Suites yang tersedia:**
+1. ✅ Register toko → Login → Dashboard accessible
+2. ✅ Upload item → AI analyze → Simpan inventory
+3. ✅ Buat order → Payment link → Webhook → Status paid
+4. ✅ Upload bukti transfer → AI OCR → Order confirmed
+5. ✅ Telegram Bot flow (via API simulation)
+6. ✅ Dashboard analytics akurasi data
 
-# Instal dependensi
-npm install
+---
 
-# Jalankan mode development
-npm run dev
+## 🚀 Deploy ke Production
+
+Lihat panduan lengkap di **[DEPLOY.md](DEPLOY.md)**:
+- **Railway** untuk Backend + PostgreSQL + Redis + Telegram Bot
+- **Vercel** untuk Next.js Web Dashboard
+- Setup Midtrans Webhook & Telegram Webhook
+
+---
+
+## 📁 Struktur Project
+
 ```
-Aplikasi web dapat diakses di `http://localhost:3000`.
+uka-uka/
+├── 📁 backend/              # FastAPI REST API
+│   ├── app/
+│   │   ├── api/v1/          # Route handlers (auth, items, orders, dll)
+│   │   ├── models/          # SQLAlchemy models
+│   │   ├── schemas/         # Pydantic schemas
+│   │   ├── ai_service.py    # Integrasi Gemini & Claude
+│   │   ├── payment_service.py # Integrasi Midtrans
+│   │   └── main.py          # FastAPI app entry point
+│   ├── alembic/             # Database migrations
+│   ├── tests/               # Integration tests (pytest)
+│   ├── seed_demo_data.py    # Demo data seeder
+│   └── Dockerfile           # Multi-stage build
+│
+├── 📁 web/                  # Next.js Web Dashboard
+│   ├── app/
+│   │   ├── dashboard/       # Dashboard pages
+│   │   ├── inventory/       # Inventory pages
+│   │   ├── orders/          # Order pages
+│   │   └── ...              # Other pages
+│   └── Dockerfile           # Standalone Next.js build
+│
+├── 📁 mobile/               # Flutter Mobile App
+│   ├── lib/
+│   │   ├── core/            # API client, theming, routing
+│   │   ├── features/        # Auth, Dashboard, Inventory, Orders
+│   │   └── shared/          # Providers, Models
+│   └── pubspec.yaml
+│
+├── 📁 bot/                  # Telegram Bot (Python)
+│   ├── bot/
+│   │   └── main.py          # Bot handlers
+│   └── Dockerfile           # Alpine-based image
+│
+├── 📄 docker-compose.yml    # Local development
+├── 📄 docker-compose.prod.yml # Production dengan resource limits
+├── 📄 setup-env.sh          # Interactive environment setup
+├── 📄 check-deps.sh         # Dependency checker
+├── 📄 DEMO_SCRIPT.md        # Panduan demo 7 menit
+├── 📄 DEPLOY.md             # Deploy guide (Railway + Vercel)
+└── 📄 README.md             # File ini
+```
 
-### E. Mobile App Owner (`/mobile`)
-```bash
-# Masuk ke direktori
-cd mobile
+---
 
-# Dapatkan dependensi Dart/Flutter
-flutter pub get
+## 🤝 Kontribusi
 
-# Jalankan aplikasi (pastikan emulator/perangkat fisik terhubung)
-flutter run
+Kontribusi sangat kami sambut! Silakan:
+
+1. Fork repository ini
+2. Buat branch fitur: `git checkout -b feature/nama-fitur`
+3. Commit perubahan: `git commit -m 'feat: tambah fitur X'`
+4. Push ke branch: `git push origin feature/nama-fitur`
+5. Buat Pull Request
+
+### Konvensi Commit
+```
+feat: tambah fitur baru
+fix: perbaiki bug
+docs: update dokumentasi
+test: tambah/update tests
+refactor: refactor kode
 ```
 
 ---

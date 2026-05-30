@@ -29,4 +29,4 @@ class OrderModel(Base):
     # Relasi
     user = relationship("UserModel", back_populates="orders")
     customer = relationship("CustomerModel", back_populates="orders")
-    payment_proofs = relationship("PaymentProofModel", back_populates="order", cascade="all, delete-orphan")
+    payment_proofs = relationship("PaymentProofModel", back_populates="order", cascade="all, delete-orphan", lazy="selectin")
